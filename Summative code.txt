@@ -1,0 +1,291 @@
+import java.util.ArrayList;  
+import java.util.LinkedList;
+import java.util.Scanner;
+import java.util.*;
+
+class Node{ // Node class that represents the restaurant information 
+  private String name;
+  private String description;
+  private int rating;
+  private int address;  // address of restaurant 
+  private int location; // location of user 
+  Node next;
+
+  public Node(String name, String description, int rating, int address, int location){ // Constructor 
+    this.name = name;
+    this.description = description;
+    this.rating = rating;
+    this.address = address;
+    this.next = null;
+    this.location = location;
+  }
+
+  public String toString(){ // Prints the information about each restaurant 
+    String result = "";
+    result += "\n\t\t\t" + this.name; 
+    result += "\n\nDescription:\t" + this.description; 
+    result += "\t\tRating: " + this.rating + " Stars"; 
+
+    Track track1 = new Track(this.address,this.location); 
+    result += track1.createGraph(); // Creates path for the user and gives estimated time 
+    
+    if (this.next != null) {
+      result += "\n\n" + this.next; // Prints all nodes   
+    }
+    return result;
+  }
+
+  // assinging getters and setters for attributes
+  
+  public String getName(){
+    return this.name;
+  }
+
+  public void setName(String newName){
+    this.name = newName;
+  }
+
+  public String getDescription(){
+    return this.description;
+  }
+
+  public void setDescription(String newDescription){
+    this.description = newDescription;
+  }
+
+  public int rating(){
+    return this.rating;
+  }
+
+  public void setRating(int newRating){
+    this.rating = newRating;
+  }
+
+  public int address(){
+    return this.address;
+  }
+
+  public void setAddress(int newAddress){
+    this.address = newAddress;
+  }
+
+}
+
+
+class Track { // Takes a source (user location) and destination (restaurant address)
+  private int dest;
+  private int source;
+
+	public Track(int dest, int source)
+	{
+    this.dest = dest;
+    this.source = source;
+  }
+    
+   public String createGraph() { 
+    // Nb of vertices
+		int v = 8;
+
+		// Adjacency list for storing, adds vertices 
+		ArrayList<ArrayList<Integer>> adj = new ArrayList<ArrayList<Integer>>(v);
+    
+		for (int i = 0; i < v; i++) {
+			adj.add(new ArrayList<Integer>());
+		}
+
+    // Using the adjacency list, the addEdge method creates an edge between different vertices 
+		addEdge(adj, 0, 1); // (adj, i, j)
+		addEdge(adj, 0, 3);
+		addEdge(adj, 1, 2);
+		addEdge(adj, 3, 4);
+		addEdge(adj, 3, 7);
+		addEdge(adj, 4, 5);
+		addEdge(adj, 4, 6);
+		addEdge(adj, 4, 7);
+		addEdge(adj, 5, 6);
+		addEdge(adj, 6, 7);
+
+    String result = ""; // Collectes all the string outputs to return to the node class 
+    
+    int prev[] = new int[v]; // Creates a previous values list 
+		int dist[] = new int[v]; // Distance values from i to source 
+
+		if (BFS(adj, source, dest, v, prev, dist) == false) { // If the BFS does not find a connection, it means the user is already at that restaurant 
+      result += "\nAlready there!";
+			return result;
+		}
+
+		// LinkedList to store pathway
+		LinkedList<Integer> path = new LinkedList<Integer>();
+		int crawl = dest;
+		path.add(crawl);
+		while (prev[crawl] != -1) {
+			path.add(prev[crawl]);
+			crawl = prev[crawl];
+		}
+
+		// Print distance
+		result += "\nShortest path length is : " + dist[dest]; 
+
+		// Prints shortest path possible
+		result += "\nPath :"; 
+		for (int i = path.size() - 1; i >= 0; i--) {
+			result += path.get(i) + " -> ";
+		}
+    result += "Destination\n\nEstimated time: "+path.size()*5+" minutes"; // Adds estimated time to get there by multiplying the path size by 5, (Implying that each step will take 5 minutes)
+
+    return result;
+	}
+
+  // Forms the edge between two vertices
+
+	private void addEdge(ArrayList<ArrayList<Integer>> adj, int i, int j) {
+		adj.get(i).add(j);
+		adj.get(j).add(i);
+	}
+
+	private boolean BFS(ArrayList<ArrayList<Integer>> adj, int src, int dest, int v, int prev[], int dist[]) {
+
+		// A queue to store verticies 
+    LinkedList<Integer> queue = new LinkedList<Integer>();
+
+    // Stores if a vertex has been visited at least once 
+		boolean visited[] = new boolean[v];
+
+    // Since no vertex has been visited at first, visited[] is set to false
+		for (int i = 0; i < v; i++) {
+			visited[i] = false;
+			dist[i] = Integer.MAX_VALUE; // There isn't a path yet so distance can jut be infinity 
+			prev[i] = -1; // Previous is set to the vertex before 
+		}
+
+		visited[src] = true; // src or source is the user's location so it is already visted therefore true 
+		dist[src] = 0; // The distance from source to itself is 0 
+		queue.add(src); // Source is added to the queue
+
+		// bfs Algorithm
+		while (!queue.isEmpty()) { // The path ends when the queue is empty 
+			int u = queue.remove(); // a value is removed from queue when u is called 
+			for (int i = 0; i < adj.get(u).size(); i++) { 
+				if (visited[adj.get(u).get(i)] == false) { // If a place is not visited...
+					visited[adj.get(u).get(i)] = true;       // It is added and the distance gets longer 
+					dist[adj.get(u).get(i)] = dist[u] + 1;
+					prev[adj.get(u).get(i)] = u;             
+					queue.add(adj.get(u).get(i));            
+
+					// stopping loop when the destination is found and returning true 
+					if (adj.get(u).get(i) == dest)
+						return true;
+				}
+			}
+		}
+		return false; // A connection is not found and the user is already there 
+	}
+
+  public void setDest(int chosenDest){
+    this.dest = chosenDest;
+  }
+
+  public int getDest(){
+    return this.dest;
+  }
+
+}
+
+class ChoiceList { // A list that adds and stores restaurants
+  Node head;
+
+  public ChoiceList(Node head) {
+    this.head = head;
+  }
+
+  public String toString() {
+    return this.head.toString();
+  }
+ 
+  // ADDING TO THE LIST 
+
+  public void add(String name, String description, int rating, int address, int location) {
+    Node n = new Node(name, description, rating, address, location);
+    n.next = this.head;
+    this.head = n;
+
+  }
+
+}
+
+
+class Location { // Takes the user's location 
+
+  public int location () {
+      
+    Scanner input = new Scanner(System.in); 
+
+    int nums[] = {0,5,1,4,3,6,2,7} ; // The numbers of different streets are added 
+
+    for (int h = 0; h < nums.length; h++) { // They are sorted using bubble sort 
+      for (int i = 1; i < nums.length - 1; i++) {
+        if (nums[i-1] > nums[i]) {
+          int temp = nums[i-1];
+          nums[i-1] = nums[i];
+          nums[i] = temp;
+        }
+      }
+    }
+    
+    
+    String stLocations = nums[0] + "   Bloor St.\n";
+    stLocations += nums[1] + "   Berthold St.\n";
+    stLocations += nums[2] + "   Woodbridge Avenue\n";
+    stLocations += nums[3] + "   Granos St.\n";
+    stLocations += nums[4] + "   Onslow Heights St.\n";
+    stLocations += nums[5] + "   Marley St.\n";
+    stLocations += nums[6] + "   North York Avenue\n";
+    stLocations += nums[7] + "   Atherton St.\n";
+
+    System.out.println(stLocations);
+    
+    System.out.println("\nWhat is your current address? (ex. 1 Berthold St.) "); // The user may input the street name as well
+    String user_address = input.nextLine();
+
+    String st = onlyNb(user_address);
+    int stNb = Integer.valueOf(st);
+
+    return stNb;
+
+  }
+    
+  public String onlyNb(String str) { // Takes the street number from the user's location recursively
+
+    if (str.equals("")) return str;
+    
+    if (!(Character.isDigit(str.charAt(0)))) return onlyNb(str.substring(1));
+    
+    else return str.charAt(0) + onlyNb(str.substring(1));
+  }
+
+}
+
+
+class Main {
+  public static void main(String[] args) {
+    
+    System.out.println("\n\t\t\tWelcome to the FoodExpress!"); // Prints an introduction
+    System.out.println("\nTell us your current location and we will show you paths to the city's restaurants!\n");
+
+    Location newLocation = new Location (); 
+    
+    int location = newLocation.location();
+
+    // Creates restaurants and adds them to the list 
+
+    Node restaurant1 = new Node("Granos Ristorante", "Great food at unbelivable prices!", 4, 4, location);
+
+    ChoiceList ll = new ChoiceList(restaurant1);
+
+    ll.add("The Tree Cafe", "A lovely environment to spend the evening", 3, 7, location);
+    ll.add("Plato's Cuisine", "City's first 5 star restaurant", 5, 2, location);
+
+    System.out.println(ll);  // Prints all restaurants 
+  }
+}
